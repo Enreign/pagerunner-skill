@@ -9,10 +9,8 @@ Use Pagerunner to drive real Chrome with your existing profiles — authenticate
 ### Installation
 
 ```bash
-# Via skills.sh (recommended)
-npx skills add Enreign/pagerunner-skill
-
-# Or manual setup in your Claude Code config:
+# Coming soon: skills.sh registry
+# For now, manual setup in your Claude Code config:
 curl -sL https://raw.githubusercontent.com/Enreign/pagerunner-skill/main/SKILL.md -o SKILL.md
 ```
 
