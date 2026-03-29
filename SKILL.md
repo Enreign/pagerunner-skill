@@ -1,11 +1,15 @@
 ---
 name: pagerunner-skill
 description: Real Chrome browser automation for AI agents. Use when you need browser automation with real Chrome sessions, authenticated access, PII anonymization, or multi-agent coordination.
+version: "1.2.0"
 metadata:
   author: Stas
   license: MIT
   repository: https://github.com/Enreign/pagerunner-skill
-  version: "1.2.0"
+  openclaw:
+    requires:
+      bins: ["pagerunner"]
+    install: brew
 ---
 
 # Pagerunner Skill — Quick Start Guide
