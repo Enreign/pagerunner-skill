@@ -556,12 +556,12 @@ async function updateDatabase() {
   for (const { value } of allKeys) {
     const analysis = JSON.parse(value);
 
-    // Post to internal API — API_KEY is your own key for your internal service,
-    // not a pagerunner requirement. Store it in your environment or use kv_get().
+    // Post to your own internal API — use kv_get() to retrieve credentials
+    const apiKey = await kv_get("config", "internal_api_key");
     const response = await fetch("https://internal-api.company.com/competitors", {
       method: "POST",
       body: JSON.stringify(analysis),
-      headers: { "Authorization": `Bearer ${process.env.API_KEY}` }
+      headers: { "Authorization": `Bearer ${apiKey}` }
     });
 
     console.log(`Updated database: ${analysis.url}`);

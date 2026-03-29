@@ -455,22 +455,15 @@ await evaluate(sessionId, tabId, `
   document.querySelector('input[type="text"]').dispatchEvent(new Event('input', { bubbles: true }));
 `);
 
-// Network inspection (XHR logging)
-await evaluate(sessionId, tabId, `
-  window._lastResponse = null;
-  const originalFetch = window.fetch;
-  window.fetch = function(...args) {
-    return originalFetch.apply(this, args).then(response => {
-      response.clone().json().then(data => {
-        window._lastResponse = { url: args[0], data };
-      });
-      return response;
-    });
-  };
+// Read page metadata
+const meta = await evaluate(sessionId, tabId, `
+  ({
+    url: window.location.href,
+    title: document.title,
+    lang: document.documentElement.lang,
+    description: document.querySelector('meta[name="description"]')?.content
+  })
 `);
-
-// Later: retrieve the captured response
-const lastResponse = await evaluate(sessionId, tabId, "window._lastResponse");
 ```
 
 **Return Value Expectations:**

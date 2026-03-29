@@ -301,35 +301,6 @@ console.log("Current state:", state);
 
 ---
 
-## Integration with External Services
-
-### API Calls with Auth
-
-```javascript
-// Use browser context to make authenticated API calls
-const response = await evaluate(sessionId, tabId, `
-  fetch('https://api.example.com/data', {
-    headers: {
-      'Authorization': 'Bearer ' + window.__AUTH_TOKEN__
-    }
-  }).then(r => r.json())
-`);
-```
-
-### Database Operations
-
-```javascript
-// After scraping, insert into database
-const scrapedData = await get_content(sessionId, tabId);
-
-// API_KEY is your own key for your internal service — not a pagerunner requirement
-await fetch('https://internal-api.company.com/data', {
-  method: 'POST',
-  body: JSON.stringify({ data: scrapedData }),
-  headers: { 'Authorization': `Bearer ${process.env.API_KEY}` }
-});
-```
-
 ---
 
 ## Troubleshooting Advanced Issues

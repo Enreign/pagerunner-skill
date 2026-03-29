@@ -1,7 +1,7 @@
 ---
 name: pagerunner-skill
 description: Real Chrome automation for AI agents — authenticated sessions, PII anonymization, snapshots, and multi-agent coordination via KV store.
-version: "1.2.2"
+version: "1.2.3"
 metadata:
   author: Stas
   license: MIT
@@ -9,10 +9,7 @@ metadata:
   openclaw:
     requires:
       bins: ["pagerunner"]
-      env: []
     install: brew
-    paths: ["~/.pagerunner/"]
-    env_notes: "pagerunner itself requires no env vars. Examples showing process.env.API_KEY are user-supplied keys for their own internal API integrations — not required by pagerunner."
 ---
 
 # Pagerunner Skill — Quick Start Guide
