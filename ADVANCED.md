@@ -322,6 +322,7 @@ const response = await evaluate(sessionId, tabId, `
 // After scraping, insert into database
 const scrapedData = await get_content(sessionId, tabId);
 
+// API_KEY is your own key for your internal service — not a pagerunner requirement
 await fetch('https://internal-api.company.com/data', {
   method: 'POST',
   body: JSON.stringify({ data: scrapedData }),

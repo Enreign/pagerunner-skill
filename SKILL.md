@@ -9,7 +9,10 @@ metadata:
   openclaw:
     requires:
       bins: ["pagerunner"]
+      env: []
     install: brew
+    paths: ["~/.pagerunner/"]
+    env_notes: "pagerunner itself requires no env vars. Examples showing process.env.API_KEY are user-supplied keys for their own internal API integrations — not required by pagerunner."
 ---
 
 # Pagerunner Skill — Quick Start Guide
@@ -100,7 +103,7 @@ try {
 
 ## Choose Your Path
 
-### 👨‍💻 Solo Developer (Claude Code / Cursor)
+### Solo Developer (Claude Code / Cursor)
 
 **Goal:** Close the implementation loop. Edit code → see the result in the browser → iterate without manual verification.
 
