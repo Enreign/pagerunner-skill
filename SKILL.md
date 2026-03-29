@@ -1,7 +1,7 @@
 ---
 name: pagerunner-skill
 description: Real Chrome automation for AI agents — authenticated sessions, PII anonymization, snapshots, and multi-agent coordination via KV store.
-version: "1.2.0"
+version: "1.2.2"
 metadata:
   author: Stas
   license: MIT
