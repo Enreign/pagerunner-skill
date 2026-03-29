@@ -4,7 +4,7 @@
 
 name: pagerunner-skill
 slug: pagerunner
-version: "1.2.0"
+version: "1.2.1"
 description: "Real Chrome browser automation for Claude — MCP-native with PII anonymization and multi-agent coordination"
 
 long_description: |
