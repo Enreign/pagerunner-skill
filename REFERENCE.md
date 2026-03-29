@@ -69,6 +69,8 @@ await close_session(sessionId);
 - To free resources before opening a new session
 - Always close to avoid dangling Chrome processes
 
+**Auto-Checkpoint (v0.6.0+):** Calling `close_session` automatically writes an "Autosave · close" checkpoint before terminating. This means session state is preserved even if you don't explicitly call `save_snapshot`.
+
 ---
 
 ### `list_sessions()`
@@ -96,6 +98,8 @@ for (const session of sessions) {
 **ICP Context:**
 - **ICP 4:** Daemon mode lists sessions across multiple agents
 - **Metadata hint:** Response includes `_total` and `_schema` for clarity
+
+**Session Persistence (v0.6.0+):** Sessions persist across daemon restarts. After a daemon restart, `list_sessions()` shows reattached sessions — Chrome windows that survived the restart. Dead sessions are automatically cleaned up from the registry.
 
 ---
 

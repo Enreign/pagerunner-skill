@@ -22,23 +22,26 @@ Master these patterns and you can build any Pagerunner workflow.
 // Open a session
 const sessionId = await open_session({ profile: "research" });
 
-// List existing tabs
-const tabs = await list_tabs(sessionId);
-console.log(`Session has ${tabs.length} tabs`);
+try {
+  // List existing tabs — always do this to get target_id
+  const tabs = await list_tabs(sessionId);
+  console.log(`Session has ${tabs.length} tabs`);
 
-// Open new tabs in parallel
-const tab1 = await new_tab(sessionId, "https://competitor-a.com");
-const tab2 = await new_tab(sessionId, "https://competitor-b.com");
+  // Open new tabs in parallel
+  const tab1 = await new_tab(sessionId, "https://competitor-a.com");
+  const tab2 = await new_tab(sessionId, "https://competitor-b.com");
 
-// All share same auth cookies — logged in once
-// Read all tabs in parallel
-const results = await Promise.all([
-  get_content(sessionId, tab1.target_id),
-  get_content(sessionId, tab2.target_id)
-]);
-
-// Close the session
-await close_session(sessionId);
+  // All share same auth cookies — logged in once
+  // Read all tabs in parallel
+  const results = await Promise.all([
+    get_content(sessionId, tab1.target_id),
+    get_content(sessionId, tab2.target_id)
+  ]);
+} finally {
+  // Always close — even if something throws above
+  // Also writes an auto-checkpoint (v0.6.0+)
+  await close_session(sessionId);
+}
 ```
 
 **ICP-Specific Context:**

@@ -66,6 +66,76 @@ async function scrapeWithCheckpoints() {
 
 ---
 
+## Session Persistence & Auto-Reattach (v0.6.0+)
+
+Chrome browser windows now survive daemon restarts. You no longer lose sessions when the daemon crashes or is intentionally restarted.
+
+### How It Works
+
+- **TCP-only Chrome transport** — Chrome runs on `--remote-debugging-port` on `127.0.0.1`, independent of the daemon process
+- **Session registry** — daemon stores session metadata (profile, debug port, security params) in its DB
+- **Startup reconciliation** — on every daemon/MCP startup, scans the registry and TCP-reattaches to surviving Chrome instances; dead sessions are cleaned up automatically
+- **Graceful shutdown** — SIGTERM/SIGINT leaves Chrome alive; Chrome windows persist until the daemon restarts and reattaches
+
+### Example: Daemon Restart Workflow
+
+```javascript
+// Start working
+const sessionId = await open_session({ profile: "agent-work" });
+const [tab] = await list_tabs(sessionId);
+await navigate(sessionId, tab.target_id, "https://internal.mycompany.com");
+
+// ... daemon crashes or is intentionally stopped ...
+
+// After restart: sessions auto-reattach
+// Same session_id works again — tabs, cookies, and scroll position preserved
+const tabs = await list_tabs(sessionId);  // Same tabs, same state
+
+// Or: list all surviving sessions
+const allSessions = await list_sessions();  // Shows reattached sessions
+```
+
+### Practical Impact
+
+| Before v0.6.0 | After v0.6.0 |
+|---|---|
+| Daemon restart = lost sessions | Daemon restart = Chrome survives, reattaches |
+| Had to re-open and re-auth | Existing sessions resume automatically |
+| Session IDs became stale | Same session IDs work after reattach |
+
+---
+
+## Auto-Checkpoints & Configurable Retention (v0.6.0+)
+
+### Auto-Checkpoints
+
+Pagerunner now automatically saves session state checkpoints:
+- **On `close_session`** — always writes an "Autosave · close" checkpoint
+- **Periodically** — every 5 minutes by default while sessions are active
+
+This means you can restore state from the last checkpoint even if the session was closed without an explicit `save_snapshot`.
+
+### Configuration
+
+Add to `~/.pagerunner/config.toml`:
+
+```toml
+[checkpoints]
+enabled = true
+interval_seconds = 300  # How often to auto-checkpoint (default: 300 = 5 min)
+
+[retention]
+max_snapshot_versions = 10   # How many snapshot versions to keep (default: 10)
+site_knowledge_ttl_days = 0  # Days before snapshots expire (default: 0 = indefinite)
+```
+
+**Key options:**
+- `interval_seconds` — lower for more frequent checkpoints (e.g., `60` for every minute), `0` to disable periodic checkpoints
+- `max_snapshot_versions` — controls disk usage; older versions are pruned when limit is hit
+- `site_knowledge_ttl_days = 0` — indefinite retention (default); set to `30` to expire after 30 days
+
+---
+
 ## Daemon Mode & Multi-Client Coordination
 
 ### Setup
@@ -76,6 +146,12 @@ pagerunner daemon &
 
 # All `pagerunner mcp` instances auto-detect daemon
 # No manual coordination needed
+
+# Graceful shutdown — Chrome windows survive
+kill $(pgrep -f "pagerunner daemon")
+
+# Restart — daemon auto-reattaches to Chrome windows
+pagerunner daemon &
 ```
 
 ### Verification
@@ -272,20 +348,20 @@ pagerunner daemon &
 
 ### Stale Sessions
 
-Sessions should be closed after use:
+Sessions should be closed after use. In v0.6.0+, `close_session` also writes an auto-checkpoint, so closing cleanly is even more valuable:
 
 ```javascript
-// ❌ WRONG — session never closed
+// ❌ WRONG — session never closed (no auto-checkpoint written)
 const sessionId = await open_session(...);
 // ... do work ...
 // forgot to close_session
 
-// ✅ RIGHT — always close
+// ✅ RIGHT — always close; triggers auto-checkpoint on close
 try {
   const sessionId = await open_session(...);
   // ... do work ...
 } finally {
-  await close_session(sessionId);
+  await close_session(sessionId);  // Writes "Autosave · close" checkpoint
 }
 ```
 
@@ -295,7 +371,7 @@ try {
 
 - [ ] Use daemon mode for multi-agent workflows
 - [ ] Store credentials in KV, not code
-- [ ] Close sessions when done (use try/finally)
+- [ ] Close sessions when done (use try/finally) — triggers auto-checkpoint
 - [ ] Cache results when possible
 - [ ] Monitor daemon logs for errors
 - [ ] Use specific selectors (not DOM traversal)
@@ -303,6 +379,8 @@ try {
 - [ ] Checkpoint long-running jobs
 - [ ] Test with sample data first
 - [ ] Enable audit logging for security-sensitive workflows
+- [ ] Tune `[checkpoints] interval_seconds` for your workflow (lower = more resilient, more disk)
+- [ ] Set `[retention] max_snapshot_versions` to prevent unbounded disk growth
 
 ---
 

@@ -5,12 +5,94 @@ metadata:
   author: Stas
   license: MIT
   repository: https://github.com/Enreign/pagerunner-skill
-  version: "1.0.0"
+  version: "1.2.0"
 ---
 
 # Pagerunner Skill — Quick Start Guide
 
 **Pagerunner** is real Chrome browser automation for AI agents. It gives Claude, Cursor, Windsurf, or any MCP client native control over your real Chrome — with your existing login sessions, cookies, and browser history already loaded.
+
+## For AI Agents: Decision Guide
+
+If you are an AI agent executing a task with this skill, follow these rules. They are non-negotiable — they prevent the most common failures.
+
+### Rule 1: Every workflow starts the same way
+
+```javascript
+const sessionId = await open_session({ profile: "personal" });  // or "agent-work", etc.
+const [tab] = await list_tabs(sessionId);
+const tabId = tab.target_id;  // Save this — every tool needs it
+```
+
+Get `target_id` from `list_tabs` before anything else. Without it, no other tools work.
+
+### Rule 2: `wait_for` before every interaction (no exceptions)
+
+After `navigate()`, the page is loading. Selectors don't exist yet. **Always wait before clicking, filling, or evaluating:**
+
+```javascript
+await navigate(sessionId, tabId, url);
+await wait_for(sessionId, tabId, { selector: ".any-stable-element", ms: 5000 });
+// Only now is it safe to click, fill, get_content, evaluate
+```
+
+Skipping this causes "selector not found" errors. If you don't know a stable selector, use `get_content` first to find one.
+
+### Rule 3: Understand the page before acting
+
+Don't guess at selectors. Call `get_content` to see what's on the page, then act:
+
+```javascript
+const structure = await get_content(sessionId, tabId);
+// Reveals: visible text, form fields, buttons, navigation state
+// Use this to find the right selectors before fill/click/evaluate
+```
+
+### Rule 4: Which input tool to use
+
+| If the app uses... | Use... |
+|---|---|
+| React / Vue / Angular | `fill()` — clears field, fires change events |
+| Plain HTML / native inputs | `type_text()` — types without clearing |
+| Unsure | `fill()` — it's the safer default |
+
+### Rule 5: Verify after every action
+
+After submitting a form or clicking a button, confirm it worked:
+
+```javascript
+await click(sessionId, tabId, ".submit-btn");
+await wait_for(sessionId, tabId, { selector: ".success-message, .error-message", ms: 5000 });
+const result = await get_content(sessionId, tabId);
+// Check result contains expected confirmation — never assume success
+```
+
+### Rule 6: `evaluate()` must return labeled objects
+
+```javascript
+// ❌ Never — array field order is ambiguous, causes wrong answers
+return [likes, replies];
+
+// ✅ Always — labeled fields are unambiguous
+return { likes, replies };
+```
+
+Pagerunner's metadata block will warn you if you return an array. Read it.
+
+### Rule 7: Always close sessions with try/finally
+
+```javascript
+const sessionId = await open_session({ profile: "..." });
+try {
+  // ... workflow ...
+} finally {
+  await close_session(sessionId);  // Runs even if the workflow throws
+}
+```
+
+`close_session` also writes an auto-checkpoint (v0.6.0+), preserving session state.
+
+---
 
 ## Choose Your Path
 
@@ -100,6 +182,10 @@ pagerunner daemon &  # Run once, holds the DB lock
 
 # Now use Pagerunner in cron, shell scripts, or Hermes tasks
 # Multiple agents share state via KV store
+
+# v0.6.0: Chrome windows SURVIVE daemon restarts
+kill $(pgrep -f "pagerunner daemon") && pagerunner daemon &
+# Sessions auto-reattach — no lost work
 ```
 
 ```javascript
@@ -110,9 +196,9 @@ await kv_set("pipeline", "pricing_data", JSON.stringify(results));
 const data = JSON.parse(await kv_get("pipeline", "pricing_data"));
 ```
 
-**Killer Features:** Daemon + KV coordination + snapshots for auth handoff between agents
+**Killer Features:** Daemon + KV coordination + snapshots for auth handoff + **session persistence across restarts (v0.6.0+)**
 
-**Learn More:** See ADVANCED.md → "Multi-agent patterns"
+**Learn More:** See ADVANCED.md → "Session Persistence & Auto-Reattach"
 
 ---
 
@@ -176,6 +262,16 @@ Use `fill()` for modern frameworks. Use `type_text()` for simple inputs.
 `wait_for` can wait for a selector, a URL pattern, or a fixed delay. The response tells you what happened.
 
 **Read the metadata block.** It shows `_condition_type` (selector/url/fixed_delay) and `_condition_met` (true/false).
+
+---
+
+### 6️⃣ Sessions Survive Daemon Restarts (v0.6.0+)
+
+**Problem:** You restart the daemon expecting a clean slate, but existing Chrome windows are still attached.
+
+**Why:** v0.6.0 uses TCP-based Chrome transport — Chrome runs independently of the daemon process. Sessions auto-reattach on startup.
+
+**Solution:** This is intentional. Call `list_sessions()` to see surviving sessions. Call `close_session(id)` to clean up explicitly if you don't want them. See ADVANCED.md → "Session Persistence & Auto-Reattach".
 
 ---
 
