@@ -1,6 +1,6 @@
 ---
 name: pagerunner-skill
-description: Real Chrome browser automation for AI agents. Use when you need browser automation with real Chrome sessions, authenticated access, PII anonymization, or multi-agent coordination.
+description: Real Chrome automation for AI agents — authenticated sessions, PII anonymization, snapshots, and multi-agent coordination via KV store.
 version: "1.2.0"
 metadata:
   author: Stas
