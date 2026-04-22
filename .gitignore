@@ -33,7 +33,8 @@ venv/
 .claude/
 *.claude-session
 
-# Skills installation artifacts (root-level only; authored skill lives under .agents/skills/)
+# Skills installation artifacts
+# Note: /skills/ itself is tracked — it holds the authored skill.
+# skills-lock.json and .clawhub/ are local install state only.
 /skills-lock.json
-/skills/
 /.clawhub/
