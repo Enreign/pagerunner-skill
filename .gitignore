@@ -33,6 +33,7 @@ venv/
 .claude/
 *.claude-session
 
-# Skills installation artifacts
-skills-lock.json
-skills/
+# Skills installation artifacts (root-level only; authored skill lives under .agents/skills/)
+/skills-lock.json
+/skills/
+/.clawhub/

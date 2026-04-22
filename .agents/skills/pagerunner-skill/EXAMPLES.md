@@ -556,11 +556,12 @@ async function updateDatabase() {
   for (const { value } of allKeys) {
     const analysis = JSON.parse(value);
 
-    // Post to internal API
+    // Post to your own internal API — use kv_get() to retrieve credentials
+    const apiKey = await kv_get("config", "internal_api_key");
     const response = await fetch("https://internal-api.company.com/competitors", {
       method: "POST",
       body: JSON.stringify(analysis),
-      headers: { "Authorization": `Bearer ${process.env.API_KEY}` }
+      headers: { "Authorization": `Bearer ${apiKey}` }
     });
 
     console.log(`Updated database: ${analysis.url}`);
