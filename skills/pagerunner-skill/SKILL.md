@@ -1,7 +1,8 @@
 ---
 name: pagerunner-skill
 description: Real Chrome automation for AI agents — authenticated sessions, PII anonymization, sealed secrets, site adapters, session checkpoints, and video recording.
-version: "1.3.0"
+version: "1.3.1"
+license: MIT
 metadata:
   author: Stas
   license: MIT
